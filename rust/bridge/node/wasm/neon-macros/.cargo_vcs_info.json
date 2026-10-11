@@ -1,0 +1,6 @@
+{
+  "git": {
+    "sha1": "d493faf063900c1555b0c8be515778c95e14bec9"
+  },
+  "path_in_vcs": "crates/neon-macros"
+}
