@@ -39,6 +39,8 @@ default-members = [
     "rust/zkcredential",
     "rust/zkgroup",
 ]
+# WEB-FORK: vendored Neon with wasm (emnapi) support, used through [patch.crates-io].
+exclude = ["rust/bridge/node/wasm/neon", "rust/bridge/node/wasm/neon-macros"]
 resolver = "2" # so that our dev-dependency features don't leak into products
 
 [workspace.package]
@@ -154,6 +156,7 @@ hyper = "1.7"
 hyper-util = "0.1.17"
 indexmap = "2.7.0"
 intmap = "3.1.2"
+inventory = "0.3.21"
 itertools = "0.15.0"
 jni = "0.22.4"
 libc = "0.2.186"
@@ -243,6 +246,10 @@ zeroize = "1.8.2"
 
 boring = { git = 'https://github.com/signalapp/boring', tag = "signal-v5.2.0" }
 boring-sys = { git = 'https://github.com/signalapp/boring', tag = "signal-v5.2.0" }
+
+# WEB-FORK: Neon 1.1.1 plus wasm support; identical behavior on other targets.
+neon = { path = "rust/bridge/node/wasm/neon" }
+neon-macros = { path = "rust/bridge/node/wasm/neon-macros" }
 
 [profile.dev.package.argon2]
 opt-level = 2 # libsignal-account-keys unit tests are too slow with an unoptimized argon2

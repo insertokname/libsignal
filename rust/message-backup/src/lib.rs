@@ -222,6 +222,8 @@ impl<R: AsyncRead + AsyncSkip + Unpin> BackupReader<frame::FramesReader<R>> {
     }
 }
 
+// WEB-FORK: wasm has no threads, so there the frames are processed as they are read.
+#[cfg_attr(target_family = "wasm", allow(unreachable_code, unused_variables))]
 async fn read_all_frames<M: backup::method::Method + backup::ReferencedTypes>(
     purpose: Purpose,
     mut reader: VarintDelimitedReader<impl AsyncRead + Unpin + VerifyHmac>,
@@ -250,6 +252,18 @@ where
     add_found_unknown(unknown_fields, backup_info.collect_unknown_fields(), 0);
 
     let mut backup = backup::PartialBackup::new(backup_info, purpose)?;
+
+    #[cfg(target_family = "wasm")]
+    {
+        let mut frame_index = 1;
+        while let Some(frame) = reader.read_next().await.map_err(Error::Parse)? {
+            let these_unknown_fields = backup.parse_and_add_frame(&frame, |frame| visitor(frame))?;
+            add_found_unknown(unknown_fields, these_unknown_fields, frame_index);
+            frame_index += 1;
+        }
+        reader.into_inner().verify_hmac().await?;
+        return Ok(backup);
+    }
 
     // From here on we split the work into two separate threads:
     // - this thread, which reads frames from the reader

@@ -15,4 +15,12 @@ fn main() {
         // https://blog.rust-lang.org/2024/05/17/enabling-rust-lld-on-linux.html#possible-drawbacks
         println!("cargo:rustc-link-arg=-Wl,-z,nostart-stop-gc");
     }
+    let target_family = env::var("CARGO_CFG_TARGET_FAMILY").unwrap_or_default();
+    if target_family.split(',').any(|family| family == "wasm") {
+        // WEB-FORK: emnapi needs the allocator and the function table to pass
+        // memory and callbacks between JavaScript and the module.
+        for export in ["--export=malloc", "--export=free", "--export-table"] {
+            println!("cargo:rustc-cdylib-link-arg={export}");
+        }
+    }
 }

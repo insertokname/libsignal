@@ -8,6 +8,7 @@ use std::future::Future;
 use futures_util::{AsyncReadExt as _, FutureExt};
 use io::{AsyncInput, InputStream};
 use libsignal_bridge_macros::*;
+#[cfg(not(target_family = "wasm"))]
 use libsignal_bridge_types::net::TokioAsyncContext;
 use libsignal_bridge_types::support::*;
 use libsignal_bridge_types::*;
@@ -44,6 +45,16 @@ where
         _label: &'static str,
     ) -> CancellationId {
         let future = make_future(std::future::pending());
+        // WEB-FORK: wasm has no threads; the future never suspends, so it can run right here.
+        #[cfg(target_family = "wasm")]
+        return {
+            future
+                .now_or_never()
+                .expect("no need to suspend in testing methods")
+                .report_to(completer);
+            CancellationId::NotSupported
+        };
+        #[cfg_attr(target_family = "wasm", expect(unreachable_code))]
         std::thread::spawn(move || {
             std::panic::catch_unwind(std::panic::AssertUnwindSafe(move || {
                 future
@@ -70,6 +81,7 @@ async fn TESTING_FutureSuccess(input: u8) -> i32 {
     i32::from(input) * 2
 }
 
+#[cfg(not(target_family = "wasm"))]
 #[bridge_io(TokioAsyncContext, nice = true)]
 async fn TESTING_TokioAsyncContext_FutureSuccessBytes(count: i32) -> Vec<u8> {
     vec![0; usize::try_from(count).unwrap()]
@@ -87,6 +99,7 @@ fn TESTING_FutureCancellationCounter_Create(initial_value: u8) -> TestingFutureC
     TestingFutureCancellationCounter(tokio::sync::Semaphore::new(initial_value.into()).into())
 }
 
+#[cfg(not(target_family = "wasm"))]
 #[bridge_io(TokioAsyncContext)]
 async fn TESTING_FutureCancellationCounter_WaitForCount(
     count: &TestingFutureCancellationCounter,
@@ -99,11 +112,13 @@ async fn TESTING_FutureCancellationCounter_WaitForCount(
         .expect("not closed");
 }
 
+#[cfg(not(target_family = "wasm"))]
 #[bridge_io(TokioAsyncContext)]
 async fn TESTING_FutureIncrementOnCancel(_guard: TestingFutureCancellationGuard) {
     std::future::pending().await
 }
 
+#[cfg(not(target_family = "wasm"))]
 #[bridge_io(TokioAsyncContext, ffi = false, node = false)]
 async fn TESTING_AcquireSemaphoreAndGet(
     semaphore: &TestingSemaphore,
@@ -113,6 +128,7 @@ async fn TESTING_AcquireSemaphoreAndGet(
     value_holder.0.load(std::sync::atomic::Ordering::SeqCst)
 }
 
+#[cfg(not(target_family = "wasm"))]
 #[bridge_io(TokioAsyncContext)]
 async fn TESTING_TokioAsyncFuture(input: u8) -> i32 {
     i32::from(input) * 3
@@ -399,6 +415,7 @@ pub mod test_conversions {
     fn TESTING_conversion_string_identity(x: String) -> String {
         x
     }
+    #[cfg(not(target_family = "wasm"))]
     #[bridge_io(TokioAsyncContext, nice = true, ffi = false, jni = false)]
     async fn TESTING_conversion_string_identity_async(x: String) -> String {
         x
@@ -411,6 +428,7 @@ pub mod test_conversions {
     fn TESTING_conversion_bool_identity(x: bool) -> bool {
         x
     }
+    #[cfg(not(target_family = "wasm"))]
     #[bridge_io(TokioAsyncContext, nice = true, ffi = false, jni = false)]
     async fn TESTING_conversion_bool_identity_async(x: bool) -> bool {
         x
@@ -423,6 +441,7 @@ pub mod test_conversions {
     fn TESTING_conversion_u8_identity(x: u8) -> u8 {
         x
     }
+    #[cfg(not(target_family = "wasm"))]
     #[bridge_io(TokioAsyncContext, nice = true, ffi = false, jni = false)]
     async fn TESTING_conversion_u8_identity_async(x: u8) -> u8 {
         x
@@ -435,6 +454,7 @@ pub mod test_conversions {
     fn TESTING_conversion_u16_identity(x: u16) -> u16 {
         x
     }
+    #[cfg(not(target_family = "wasm"))]
     #[bridge_io(TokioAsyncContext, nice = true, ffi = false, jni = false)]
     async fn TESTING_conversion_u16_identity_async(x: u16) -> u16 {
         x
@@ -447,6 +467,7 @@ pub mod test_conversions {
     fn TESTING_conversion_i32_identity(x: i32) -> i32 {
         x
     }
+    #[cfg(not(target_family = "wasm"))]
     #[bridge_io(TokioAsyncContext, nice = true, ffi = false, jni = false)]
     async fn TESTING_conversion_i32_identity_async(x: i32) -> i32 {
         x
@@ -459,6 +480,7 @@ pub mod test_conversions {
     fn TESTING_conversion_ServiceId_identity(x: ServiceId) -> ServiceId {
         x
     }
+    #[cfg(not(target_family = "wasm"))]
     #[bridge_io(TokioAsyncContext, nice = true, ffi = false, jni = false)]
     async fn TESTING_conversion_ServiceId_identity_async(x: ServiceId) -> ServiceId {
         x
@@ -472,6 +494,7 @@ pub mod test_conversions {
     fn TESTING_conversion_Data_identity(x: &[u8]) -> Vec<u8> {
         x.to_vec()
     }
+    #[cfg(not(target_family = "wasm"))]
     #[bridge_io(TokioAsyncContext, nice = true, ffi = false, jni = false)]
     async fn TESTING_conversion_Data_identity_async(x: &[u8]) -> Vec<u8> {
         x.to_vec()
@@ -486,6 +509,7 @@ pub mod test_conversions {
     fn TESTING_conversion_Data_VecU8_identity(x: Vec<u8>) -> Vec<u8> {
         x
     }
+    #[cfg(not(target_family = "wasm"))]
     #[bridge_io(TokioAsyncContext, nice = true, ffi = false, jni = false)]
     async fn TESTING_conversion_Data_VecU8_identity_async(x: Vec<u8>) -> Vec<u8> {
         x
@@ -498,6 +522,7 @@ pub mod test_conversions {
     fn TESTING_conversion_BridgeVecString_identity(x: BridgeVec<String>) -> BridgeVec<String> {
         x
     }
+    #[cfg(not(target_family = "wasm"))]
     #[bridge_io(TokioAsyncContext, nice = true, ffi = false, jni = false)]
     async fn TESTING_conversion_BridgeVecString_identity_async(
         x: BridgeVec<String>,
@@ -513,6 +538,7 @@ pub mod test_conversions {
     fn TESTING_conversion_Data32_identity(x: [u8; 32]) -> [u8; 32] {
         x
     }
+    #[cfg(not(target_family = "wasm"))]
     #[bridge_io(TokioAsyncContext, nice = true, ffi = false, jni = false)]
     async fn TESTING_conversion_Data32_identity_async(x: [u8; 32]) -> [u8; 32] {
         x
@@ -529,6 +555,7 @@ pub mod test_conversions {
     fn TESTING_conversion_BridgeVecData32_identity(x: BridgeVec<[u8; 32]>) -> BridgeVec<[u8; 32]> {
         x
     }
+    #[cfg(not(target_family = "wasm"))]
     #[bridge_io(TokioAsyncContext, nice = true, ffi = false, jni = false)]
     async fn TESTING_conversion_BridgeVecData32_identity_async(
         x: BridgeVec<[u8; 32]>,
@@ -543,6 +570,7 @@ pub mod test_conversions {
     fn TESTING_conversion_Uuid_identity(x: Uuid) -> Uuid {
         x
     }
+    #[cfg(not(target_family = "wasm"))]
     #[bridge_io(TokioAsyncContext, nice = true, ffi = false, jni = false)]
     async fn TESTING_conversion_Uuid_identity_async(x: Uuid) -> Uuid {
         x
@@ -555,6 +583,7 @@ pub mod test_conversions {
     fn TESTING_conversion_DeviceId_identity(x: DeviceId) -> DeviceId {
         x
     }
+    #[cfg(not(target_family = "wasm"))]
     #[bridge_io(TokioAsyncContext, nice = true, ffi = false, jni = false)]
     async fn TESTING_conversion_DeviceId_identity_async(x: DeviceId) -> DeviceId {
         x
@@ -587,6 +616,7 @@ pub mod test_conversions {
     fn TESTING_conversion_OptionalFloat_identity(x: Option<f32>) -> Option<f32> {
         x
     }
+    #[cfg(not(target_family = "wasm"))]
     #[bridge_io(TokioAsyncContext, nice = true, ffi = false, jni = false)]
     async fn TESTING_conversion_OptionalFloat_identity_async(x: Option<f32>) -> Option<f32> {
         x
@@ -600,6 +630,7 @@ pub mod test_conversions {
     fn TESTING_conversion_Float_identity(x: f32) -> f32 {
         x
     }
+    #[cfg(not(target_family = "wasm"))]
     #[bridge_io(TokioAsyncContext, nice = true, ffi = false, jni = false)]
     async fn TESTING_conversion_Float_identity_async(x: f32) -> f32 {
         x
@@ -613,6 +644,7 @@ pub mod test_conversions {
     fn TESTING_conversion_OptionalString_identity(x: Option<String>) -> Option<String> {
         x
     }
+    #[cfg(not(target_family = "wasm"))]
     #[bridge_io(TokioAsyncContext, nice = true, ffi = false, jni = false)]
     async fn TESTING_conversion_OptionalString_identity_async(x: Option<String>) -> Option<String> {
         x
@@ -631,6 +663,7 @@ pub mod test_conversions {
     fn TESTING_conversion_OptionalBytes_identity(x: Option<Vec<u8>>) -> Option<Vec<u8>> {
         x
     }
+    #[cfg(not(target_family = "wasm"))]
     #[bridge_io(TokioAsyncContext, nice = true, ffi = false, jni = false)]
     async fn TESTING_conversion_OptionalBytes_identity_async(
         x: Option<Vec<u8>>,

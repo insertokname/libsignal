@@ -106,6 +106,41 @@ macro_rules! napi_name {
 ///     (NAPI.get_undefined)(env, result)
 /// }
 /// ```
+// WEB-FORK: on wasm the Node-API functions are plain imports from the "napi"
+// module (provided by emnapi) instead of symbols looked up at runtime.
+#[cfg(target_family = "wasm")]
+macro_rules! generate {
+    (#[$extern_attr:meta] extern "C" {
+        $($(#[$attr:meta])? fn $name:ident($($param:ident: $ptype:ty$(,)?)*)$( -> $rtype:ty)?;)+
+    }) => {
+        mod imports {
+            #[allow(unused_imports)]
+            use super::*;
+
+            #[link(wasm_import_module = "napi")]
+            unsafe extern "C" {
+                $(
+                    #[link_name = napi_name!($name)]
+                    pub(super) fn $name($($param: $ptype,)*)$( -> $rtype)*;
+                )*
+            }
+        }
+
+        $(
+            #[$extern_attr] $(#[$attr])? #[inline]
+            pub unsafe fn $name($($param: $ptype,)*)$( -> ::core::result::Result<(), $rtype>)* {
+                #[allow(unused)]
+                let r = imports::$name($($param,)*);
+                $(match r {
+                    <$rtype>::Ok => Ok(()),
+                    status => Err(status)
+                })*
+            }
+        )*
+    };
+}
+
+#[cfg(not(target_family = "wasm"))]
 macro_rules! generate {
     (#[$extern_attr:meta] extern "C" {
         $($(#[$attr:meta])? fn $name:ident($($param:ident: $ptype:ty$(,)?)*)$( -> $rtype:ty)?;)+

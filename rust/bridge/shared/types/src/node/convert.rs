@@ -13,8 +13,11 @@ use std::slice;
 
 use itertools::Itertools as _;
 use libsignal_account_keys::{AccountEntropyPool, InvalidAccountEntropyPool};
+#[cfg(not(target_family = "wasm"))]
 use libsignal_net_chat::api::UploadForm;
+#[cfg(not(target_family = "wasm"))]
 use libsignal_net_chat::api::keys::DeviceSpecifier;
+#[cfg(not(target_family = "wasm"))]
 use libsignal_net_chat::stream_util::BulkPolledStreamTerminationReason;
 use neon::types::JsBigInt;
 use paste::paste;
@@ -25,6 +28,7 @@ use super::*;
 use crate::crypto::RandomNumberGenerator;
 use crate::io::{InputStream, SyncInputStream};
 use crate::message_backup::MessageBackupValidationOutcome;
+#[cfg(not(target_family = "wasm"))]
 use crate::net::chat::{
     ChatListener, NodeChatListener, NodeProvisioningListener, PreKeysResponse, ProvisioningListener,
 };
@@ -650,6 +654,7 @@ impl<const LEN: usize> NiceArgConverter for [u8; LEN] {
     }
 }
 
+#[cfg(not(target_family = "wasm"))]
 impl SimpleArgTypeInfo for DeviceSpecifier {
     type ArgType = JsNumber;
 
@@ -806,6 +811,7 @@ where
     }
 }
 
+#[cfg(not(target_family = "wasm"))]
 impl SimpleArgTypeInfo for libsignal_net_chat::api::messages::MultiRecipientSendAuthorization {
     type ArgType = JsValue;
     fn convert_from(cx: &mut FunctionContext, foreign: Handle<Self::ArgType>) -> NeonResult<Self> {
@@ -987,6 +993,7 @@ impl SimpleArgTypeInfo for Box<[String]> {
     register_ts_ffi_type!("Array<string>");
 }
 
+#[cfg(not(target_family = "wasm"))]
 impl SimpleArgTypeInfo for libsignal_net::chat::LanguageList {
     type ArgType = JsArray;
 
@@ -998,6 +1005,7 @@ impl SimpleArgTypeInfo for libsignal_net::chat::LanguageList {
     register_ts_ffi_type!("Array<string>");
 }
 
+#[cfg(not(target_family = "wasm"))]
 impl SimpleArgTypeInfo for libsignal_net_chat::api::registration::CreateSession {
     type ArgType = JsObject;
 
@@ -1020,6 +1028,7 @@ impl SimpleArgTypeInfo for libsignal_net_chat::api::registration::CreateSession 
     register_ts_ffi_type!("RegistrationCreateSessionRequest");
 }
 
+#[cfg(not(target_family = "wasm"))]
 impl SimpleArgTypeInfo for libsignal_net_chat::api::registration::SignedPreKeyBody<Box<[u8]>> {
     type ArgType = JsObject;
     fn convert_from(cx: &mut FunctionContext, foreign: Handle<Self::ArgType>) -> NeonResult<Self> {
@@ -1380,6 +1389,7 @@ bridge_trait!(SignedPreKeyStore);
 bridge_trait!(KyberPreKeyStore);
 bridge_trait!(InputStream, |x: &'a mut Self::StoredType| &mut x.0);
 
+#[cfg(not(target_family = "wasm"))]
 impl SimpleArgTypeInfo for Box<dyn ChatListener> {
     type ArgType = JsObject;
 
@@ -1389,6 +1399,7 @@ impl SimpleArgTypeInfo for Box<dyn ChatListener> {
     register_ts_ffi_type!("ChatListener");
 }
 
+#[cfg(not(target_family = "wasm"))]
 impl SimpleArgTypeInfo for Box<dyn ProvisioningListener> {
     type ArgType = JsObject;
 
@@ -1398,6 +1409,7 @@ impl SimpleArgTypeInfo for Box<dyn ProvisioningListener> {
     register_ts_ffi_type!("ProvisioningListener");
 }
 
+#[cfg(not(target_family = "wasm"))]
 impl<'a> AsyncArgTypeInfo<'a> for Box<dyn crate::net::registration::ConnectChatBridge> {
     type ArgType = JsObject;
     type StoredType = Option<crate::node::chat::NodeConnectChatFactory>;
@@ -1845,6 +1857,7 @@ impl<'storage, const LEN: usize> AsyncArgTypeInfo<'storage> for &'storage [u8; L
     }
 }
 
+#[cfg(not(target_family = "wasm"))]
 impl<'a> ResultTypeInfo<'a> for UploadForm {
     type ResultType = JsObject;
     fn convert_into(self, cx: &mut Cx<'a>) -> JsResult<'a, Self::ResultType> {
@@ -1872,6 +1885,7 @@ impl<'a> ResultTypeInfo<'a> for UploadForm {
     register_ts_ffi_type!("UploadForm");
 }
 
+#[cfg(not(target_family = "wasm"))]
 impl<'a> ResultTypeInfo<'a> for libsignal_net_chat::api::backups::CdnCredentials {
     type ResultType = JsArray;
 
@@ -1898,6 +1912,7 @@ impl NiceResultConverter for libsignal_net_chat::api::backups::CdnCredentials {
     }
 }
 
+#[cfg(not(target_family = "wasm"))]
 impl<'a> ResultTypeInfo<'a> for PreKeysResponse {
     type ResultType = JsObject;
 
@@ -2104,6 +2119,7 @@ impl<T: NiceResultConverter> NiceResultConverter for BridgeVec<T> {
     }
 }
 
+#[cfg(not(target_family = "wasm"))]
 impl<'a> ResultTypeInfo<'a> for libsignal_net::chat::Response {
     type ResultType = JsObject;
     fn convert_into(self, cx: &mut Cx<'a>) -> JsResult<'a, Self::ResultType> {
@@ -2145,6 +2161,7 @@ impl<'a> ResultTypeInfo<'a> for libsignal_net::chat::Response {
     register_ts_ffi_type!("ChatResponse");
 }
 
+#[cfg(not(target_family = "wasm"))]
 impl<'a> ResultTypeInfo<'a> for libsignal_net::cdsi::LookupResponse {
     type ResultType = JsObject;
     fn convert_into(self, cx: &mut Cx<'a>) -> JsResult<'a, Self::ResultType> {
@@ -2200,6 +2217,7 @@ impl<'a> ResultTypeInfo<'a> for libsignal_net::cdsi::LookupResponse {
     register_ts_ffi_type!("LookupResponse");
 }
 
+#[cfg(not(target_family = "wasm"))]
 impl<'a> ResultTypeInfo<'a> for libsignal_net_chat::api::ChallengeOption {
     type ResultType = JsString;
     fn convert_into(self, cx: &mut Cx<'a>) -> JsResult<'a, Self::ResultType> {
@@ -2211,6 +2229,7 @@ impl<'a> ResultTypeInfo<'a> for libsignal_net_chat::api::ChallengeOption {
     register_ts_ffi_type!("ChallengeOption");
 }
 
+#[cfg(not(target_family = "wasm"))]
 impl<'a> ResultTypeInfo<'a> for Box<[libsignal_net_chat::api::ChallengeOption]> {
     type ResultType = JsArray;
     fn convert_into(self, cx: &mut Cx<'a>) -> JsResult<'a, Self::ResultType> {
@@ -2222,6 +2241,7 @@ impl<'a> ResultTypeInfo<'a> for Box<[libsignal_net_chat::api::ChallengeOption]> 
     }
 }
 
+#[cfg(not(target_family = "wasm"))]
 impl<'a> ResultTypeInfo<'a> for libsignal_net_chat::api::messages::MismatchedDeviceError {
     type ResultType = JsObject;
     fn convert_into(self, cx: &mut Cx<'a>) -> JsResult<'a, Self::ResultType> {
@@ -2251,6 +2271,7 @@ impl<'a> ResultTypeInfo<'a> for Vec<ServiceId> {
     }
 }
 
+#[cfg(not(target_family = "wasm"))]
 impl<'a> ResultTypeInfo<'a>
     for Box<[libsignal_net_chat::api::registration::RegisterResponseBadge]>
 {
@@ -2264,6 +2285,7 @@ impl<'a> ResultTypeInfo<'a>
     }
 }
 
+#[cfg(not(target_family = "wasm"))]
 impl<'a> ResultTypeInfo<'a> for libsignal_net_chat::api::registration::RegisterResponseBadge {
     type ResultType = JsObject;
     fn convert_into(self, cx: &mut Cx<'a>) -> JsResult<'a, Self::ResultType> {
@@ -2288,6 +2310,7 @@ impl<'a> ResultTypeInfo<'a> for libsignal_net_chat::api::registration::RegisterR
     register_ts_ffi_type!("RegisterResponseBadge");
 }
 
+#[cfg(not(target_family = "wasm"))]
 impl<'a> ResultTypeInfo<'a>
     for libsignal_net_chat::api::registration::CheckSvr2CredentialsResponse
 {
@@ -2327,6 +2350,7 @@ impl<'a, T: SignalNodeError> ResultTypeInfo<'a> for crate::support::BridgedError
 }
 nice_identity_result_converter!(<T: SignalNodeError> crate::support::BridgedError<T>);
 
+#[cfg(not(target_family = "wasm"))]
 impl<'a, T: SignalNodeError> ResultTypeInfo<'a> for BulkPolledStreamTerminationReason<T> {
     type ResultType = JsValue;
 

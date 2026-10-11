@@ -30,16 +30,21 @@ pub mod protocol;
 #[cfg(any(feature = "jni", feature = "ffi"))]
 pub mod device_transfer;
 
+#[cfg(not(target_family = "wasm"))] // WEB-FORK: no networking on wasm
 mod cds2;
+#[cfg(not(target_family = "wasm"))] // WEB-FORK: no networking on wasm
 mod hsm_enclave;
+#[cfg(not(target_family = "wasm"))] // WEB-FORK: no networking on wasm
 mod sgx_session;
 
 pub mod zkgroup;
 
+#[cfg(not(target_family = "wasm"))] // WEB-FORK: no networking on wasm
 pub mod net;
 
 mod account_keys;
 
+#[cfg(not(target_family = "wasm"))] // WEB-FORK: no networking on wasm
 mod svr2;
 
 pub mod incremental_mac;

@@ -11,6 +11,18 @@ pub unsafe fn new<F>(env: Env, name: &str, callback: F) -> Result<Local, napi::S
 where
     F: Fn(Env, napi::CallbackInfo) -> Local + 'static,
 {
+    // WEB-FORK: emnapi only accepts names that are JavaScript identifiers
+    // (Neon defaults to Rust type names); others become anonymous functions.
+    #[cfg(target_family = "wasm")]
+    let name = {
+        let mut chars = name.chars();
+        let is_identifier = chars
+            .next()
+            .is_some_and(|c| c == '_' || c == '$' || c.is_ascii_alphabetic())
+            && chars.all(|c| c == '_' || c == '$' || c.is_ascii_alphanumeric());
+        if is_identifier { name } else { "" }
+    };
+
     let mut out = MaybeUninit::uninit();
     let data = Box::into_raw(Box::new(callback));
     let status = napi::create_function(

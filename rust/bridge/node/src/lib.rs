@@ -5,15 +5,20 @@
 
 #![warn(clippy::unwrap_used)]
 
+#[cfg(not(target_family = "wasm"))] // WEB-FORK: no crash dump processing on wasm
 use futures::executor;
 use libsignal_bridge::node::ResultTypeInfo;
 use libsignal_bridge::node_register;
 use libsignal_bridge::support::*;
 use libsignal_bridge_macros::bridge_fn;
 use libsignal_protocol::SealedSenderV2SentMessage;
+#[cfg(not(target_family = "wasm"))] // WEB-FORK: no crash dump processing on wasm
 use minidump::Minidump;
+#[cfg(not(target_family = "wasm"))] // WEB-FORK: no crash dump processing on wasm
 use minidump_processor::ProcessorOptions;
+#[cfg(not(target_family = "wasm"))] // WEB-FORK: no crash dump processing on wasm
 use minidump_unwind::Symbolizer;
+#[cfg(not(target_family = "wasm"))] // WEB-FORK: no crash dump processing on wasm
 use minidump_unwind::symbols::string_symbol_supplier;
 use neon::prelude::*;
 use rand::TryRngCore;
@@ -28,10 +33,18 @@ use libsignal_bridge_testing::*;
 
 #[neon::main]
 fn main(mut cx: ModuleContext) -> NeonResult<()> {
+    // WEB-FORK: on wasm the `inventory` registrations of the testing crate are
+    // only linked when something references the crate.
+    #[cfg(target_family = "wasm")]
+    std::hint::black_box(libsignal_bridge_testing::node_test_only_fn_returns_123 as *const ());
     libsignal_bridge::node::register(&mut cx)?;
     cx.export_function("initLogger", logging::init_logger)?;
-    let remote_config_keys = libsignal_bridge::net::RemoteConfigKey::KEYS.convert_into(&mut cx)?;
-    cx.export_value("NetRemoteConfigKeys", remote_config_keys)?;
+    #[cfg(not(target_family = "wasm"))] // WEB-FORK: no networking on wasm
+    {
+        let remote_config_keys =
+            libsignal_bridge::net::RemoteConfigKey::KEYS.convert_into(&mut cx)?;
+        cx.export_value("NetRemoteConfigKeys", remote_config_keys)?;
+    }
     Ok(())
 }
 
@@ -159,6 +172,7 @@ fn SealedSenderMultiRecipientMessage_Parse(
     ))
 }
 
+#[cfg(not(target_family = "wasm"))] // WEB-FORK: no crash dump processing on wasm
 #[bridge_fn(ffi = false, jni = false)]
 fn MinidumpToJSONString(buffer: &[u8]) -> String {
     let dump = Minidump::read(buffer).expect("Failed to parse minidump");

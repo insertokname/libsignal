@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
+#[cfg(not(target_family = "wasm"))]
 use libsignal_net_chat::api::registration::SignedPreKeyBody;
 use libsignal_protocol::error::Result;
 use libsignal_protocol::*;
@@ -11,8 +12,10 @@ use crate::*;
 
 bridge_get!(SessionRecord::alice_base_key -> &[u8], ffi = false, node = false);
 
+#[cfg(not(target_family = "wasm"))]
 type SignedPublicPreKey = SignedPreKeyBody<Box<[u8]>>;
 
+#[cfg(not(target_family = "wasm"))]
 #[bridge_fn]
 fn TESTING_SignedPublicPreKey_CheckBridgesCorrectly(
     source_public_key: &PublicKey,

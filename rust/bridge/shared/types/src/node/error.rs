@@ -6,13 +6,21 @@
 use std::borrow::Cow;
 use std::fmt;
 
+#[cfg(not(target_family = "wasm"))]
 use libsignal_net::infra::errors::{RetryLater, TransportConnectError};
+#[cfg(not(target_family = "wasm"))]
 use libsignal_net::infra::ws::WebSocketConnectError;
+#[cfg(not(target_family = "wasm"))]
 use libsignal_net_chat::api::backups::{BackupAuthCredentialRejected, GetUploadFormFailure};
+#[cfg(not(target_family = "wasm"))]
 use libsignal_net_chat::api::keys::GetPreKeysFailure;
+#[cfg(not(target_family = "wasm"))]
 use libsignal_net_chat::api::messages::UploadTooLarge;
+#[cfg(not(target_family = "wasm"))]
 use libsignal_net_chat::grpc::devices::DeviceIdNotFoundInAccount;
+#[cfg(not(target_family = "wasm"))]
 use libsignal_net_chat::grpc::login_purchase::ReceiptCredentialError;
+#[cfg(not(target_family = "wasm"))]
 use libsignal_net_chat::grpc::usernames::UsernameNotAvailable;
 use neon::thread::LocalKey;
 #[cfg(feature = "signal-media")]
@@ -246,16 +254,20 @@ impl SignalNodeError for SignalProtocolError {
 
 impl SimpleNodeError for libsignal_protocol::FingerprintError {}
 
+#[cfg(not(target_family = "wasm"))]
 impl SimpleNodeError for device_transfer::Error {}
 
+#[cfg(not(target_family = "wasm"))]
 impl SimpleNodeError for attest::hsm_enclave::Error {}
 
+#[cfg(not(target_family = "wasm"))]
 impl SimpleNodeError for attest::enclave::Error {}
 
 impl SimpleNodeError for signal_crypto::Error {}
 
 impl SimpleNodeError for libsignal_account_keys::Error {}
 
+#[cfg(not(target_family = "wasm"))]
 impl SignalNodeError for libsignal_net::svr2::Error {
     fn into_throwable<'cx>(self, cx: &mut Cx<'cx>, operation_name: &str) -> Handle<'cx, JsError> {
         let (name, make_props) = match &self {
@@ -290,6 +302,7 @@ impl SignalNodeError for libsignal_net::svr2::Error {
     }
 }
 
+#[cfg(not(target_family = "wasm"))]
 impl SignalNodeError for libsignal_net::svrb::Error {
     fn into_throwable<'cx>(self, cx: &mut Cx<'cx>, operation_name: &str) -> Handle<'cx, JsError> {
         let (name, make_props) = match &self {
@@ -426,6 +439,7 @@ impl SignalNodeError for std::io::Error {
     }
 }
 
+#[cfg(not(target_family = "wasm"))]
 impl SignalNodeError for libsignal_net::chat::ConnectError {
     fn into_throwable<'cx>(self, cx: &mut Cx<'cx>, operation_name: &str) -> Handle<'cx, JsError> {
         let name = match self {
@@ -459,6 +473,7 @@ impl SignalNodeError for libsignal_net::chat::ConnectError {
     }
 }
 
+#[cfg(not(target_family = "wasm"))]
 impl SimpleNodeError for libsignal_net::chat::SendError {
     fn js_error_name(&self) -> Option<&'static str> {
         match self {
@@ -477,6 +492,7 @@ impl SimpleNodeError for libsignal_net::chat::SendError {
     }
 }
 
+#[cfg(not(target_family = "wasm"))]
 impl SignalNodeError for libsignal_net::infra::errors::RetryLater {
     fn into_throwable<'cx>(self, cx: &mut Cx<'cx>, operation_name: &str) -> Handle<'cx, JsError> {
         let properties = move |cx: &mut Cx<'cx>| {
@@ -496,6 +512,7 @@ impl SignalNodeError for libsignal_net::infra::errors::RetryLater {
     }
 }
 
+#[cfg(not(target_family = "wasm"))]
 impl SignalNodeError for libsignal_net_chat::api::RateLimitChallenge {
     fn into_throwable<'cx>(self, cx: &mut Cx<'cx>, operation_name: &str) -> Handle<'cx, JsError> {
         let message = self.to_string();
@@ -539,6 +556,7 @@ impl SimpleNodeError for http::uri::InvalidUri {
     }
 }
 
+#[cfg(not(target_family = "wasm"))]
 impl SignalNodeError for libsignal_net::cdsi::LookupError {
     fn into_throwable<'cx>(self, cx: &mut Cx<'cx>, operation_name: &str) -> Handle<'cx, JsError> {
         let name = match self {
@@ -560,6 +578,7 @@ impl SignalNodeError for libsignal_net::cdsi::LookupError {
     }
 }
 
+#[cfg(not(target_family = "wasm"))]
 impl<E: SignalNodeError> SignalNodeError for libsignal_net_chat::api::RequestError<E> {
     fn into_throwable<'cx>(self, cx: &mut Cx<'cx>, operation_name: &str) -> Handle<'cx, JsError> {
         let io_error_message: Cow<'static, str> = match self {
@@ -596,12 +615,14 @@ impl SignalNodeError for std::convert::Infallible {
     }
 }
 
+#[cfg(not(target_family = "wasm"))]
 impl SimpleNodeError for UploadTooLarge {
     fn js_error_name(&self) -> Option<&'static str> {
         Some("UploadTooLarge")
     }
 }
 
+#[cfg(not(target_family = "wasm"))]
 impl SimpleNodeError for GetUploadFormFailure {
     fn js_error_name(&self) -> Option<&'static str> {
         match self {
@@ -611,12 +632,14 @@ impl SimpleNodeError for GetUploadFormFailure {
     }
 }
 
+#[cfg(not(target_family = "wasm"))]
 impl SimpleNodeError for BackupAuthCredentialRejected {
     fn js_error_name(&self) -> Option<&'static str> {
         Some("RequestUnauthorized")
     }
 }
 
+#[cfg(not(target_family = "wasm"))]
 /// Returns a function that produces the extra properties for a `MismatchedDevices`
 /// `LibSignalError`.
 ///
@@ -653,6 +676,7 @@ fn extra_props_for_mismatched_devices<'cx>(
     }
 }
 
+#[cfg(not(target_family = "wasm"))]
 impl SignalNodeError for libsignal_net_chat::api::messages::MultiRecipientSendFailure {
     fn into_throwable<'cx>(self, cx: &mut Cx<'cx>, operation_name: &str) -> Handle<'cx, JsError> {
         let msg = self.to_string();
@@ -675,6 +699,7 @@ impl SignalNodeError for libsignal_net_chat::api::messages::MultiRecipientSendFa
     }
 }
 
+#[cfg(not(target_family = "wasm"))]
 impl SignalNodeError for libsignal_net_chat::api::messages::SealedSendFailure {
     fn into_throwable<'cx>(self, cx: &mut Cx<'cx>, operation_name: &str) -> Handle<'cx, JsError> {
         let msg = self.to_string();
@@ -704,18 +729,21 @@ impl SignalNodeError for libsignal_net_chat::api::messages::SealedSendFailure {
     }
 }
 
+#[cfg(not(target_family = "wasm"))]
 impl SimpleNodeError for DeviceIdNotFoundInAccount {
     fn js_error_name(&self) -> Option<&'static str> {
         Some("DeviceIdNotFound")
     }
 }
 
+#[cfg(not(target_family = "wasm"))]
 impl SimpleNodeError for UsernameNotAvailable {
     fn js_error_name(&self) -> Option<&'static str> {
         Some("UsernameNotAvailable")
     }
 }
 
+#[cfg(not(target_family = "wasm"))]
 impl SignalNodeError for libsignal_net_chat::api::messages::UnsealedSendFailure {
     fn into_throwable<'cx>(self, cx: &mut Cx<'cx>, operation_name: &str) -> Handle<'cx, JsError> {
         let msg = self.to_string();
@@ -738,6 +766,7 @@ impl SignalNodeError for libsignal_net_chat::api::messages::UnsealedSendFailure 
     }
 }
 
+#[cfg(not(target_family = "wasm"))]
 impl SimpleNodeError for libsignal_net_chat::grpc::backups::RedeemBackupReceiptFailure {
     fn js_error_name(&self) -> Option<&'static str> {
         match self {
@@ -747,6 +776,7 @@ impl SimpleNodeError for libsignal_net_chat::grpc::backups::RedeemBackupReceiptF
     }
 }
 
+#[cfg(not(target_family = "wasm"))]
 mod registration {
     use libsignal_net::auth::Auth;
     use libsignal_net_chat::api::registration::{
@@ -1059,6 +1089,7 @@ impl SignalNodeError for libsignal_message_backup::ReadError {
     }
 }
 
+#[cfg(not(target_family = "wasm"))]
 impl SimpleNodeError for libsignal_net_chat::api::DisconnectedError {
     fn js_error_name(&self) -> Option<&'static str> {
         Some(match self {
@@ -1070,6 +1101,7 @@ impl SimpleNodeError for libsignal_net_chat::api::DisconnectedError {
     }
 }
 
+#[cfg(not(target_family = "wasm"))]
 impl SimpleNodeError for libsignal_net_chat::api::keys::GetPreKeysFailure {
     fn js_error_name(&self) -> Option<&'static str> {
         Some(match self {
@@ -1079,6 +1111,7 @@ impl SimpleNodeError for libsignal_net_chat::api::keys::GetPreKeysFailure {
     }
 }
 
+#[cfg(not(target_family = "wasm"))]
 impl SimpleNodeError for libsignal_net_chat::api::keytrans::Error {
     fn js_error_name(&self) -> Option<&'static str> {
         use libsignal_keytrans::Error as KtError;
@@ -1110,12 +1143,14 @@ impl From<WithContext<ThrownException>> for std::io::Error {
     }
 }
 
+#[cfg(not(target_family = "wasm"))]
 impl SimpleNodeError for libsignal_net_chat::grpc::usernames::UsernameNotSet {
     fn js_error_name(&self) -> Option<&'static str> {
         Some("UsernameNotSet")
     }
 }
 
+#[cfg(not(target_family = "wasm"))]
 impl SimpleNodeError for libsignal_net_chat::grpc::usernames::ConfirmUsernameError {
     fn js_error_name(&self) -> Option<&'static str> {
         Some(match self {
@@ -1125,6 +1160,7 @@ impl SimpleNodeError for libsignal_net_chat::grpc::usernames::ConfirmUsernameErr
     }
 }
 
+#[cfg(not(target_family = "wasm"))]
 impl SignalNodeError for ReceiptCredentialError {
     fn into_throwable<'cx>(self, cx: &mut Cx<'cx>, operation_name: &str) -> Handle<'cx, JsError> {
         let message = self.to_string();
@@ -1190,6 +1226,7 @@ impl SignalNodeError for ReceiptCredentialError {
     }
 }
 
+#[cfg(not(target_family = "wasm"))]
 impl SimpleNodeError for libsignal_net_chat::grpc::accounts::GenerateTotpKeyError {
     fn js_error_name(&self) -> Option<&'static str> {
         Some(match self {
@@ -1199,6 +1236,7 @@ impl SimpleNodeError for libsignal_net_chat::grpc::accounts::GenerateTotpKeyErro
     }
 }
 
+#[cfg(not(target_family = "wasm"))]
 impl SimpleNodeError for libsignal_net_chat::grpc::accounts::ConfirmTotpKeyError {
     fn js_error_name(&self) -> Option<&'static str> {
         Some(match self {
@@ -1208,6 +1246,7 @@ impl SimpleNodeError for libsignal_net_chat::grpc::accounts::ConfirmTotpKeyError
     }
 }
 
+#[cfg(not(target_family = "wasm"))]
 impl SimpleNodeError for libsignal_net_chat::grpc::accounts::StartWebAuthnRegistrationError {
     fn js_error_name(&self) -> Option<&'static str> {
         Some(match self {
@@ -1216,6 +1255,7 @@ impl SimpleNodeError for libsignal_net_chat::grpc::accounts::StartWebAuthnRegist
     }
 }
 
+#[cfg(not(target_family = "wasm"))]
 impl SimpleNodeError for libsignal_net_chat::grpc::accounts::FinishWebAuthnRegistrationError {
     fn js_error_name(&self) -> Option<&'static str> {
         Some(match self {
@@ -1225,18 +1265,21 @@ impl SimpleNodeError for libsignal_net_chat::grpc::accounts::FinishWebAuthnRegis
     }
 }
 
+#[cfg(not(target_family = "wasm"))]
 impl SimpleNodeError for libsignal_net_chat::grpc::accounts::MfaKeyNotFound {
     fn js_error_name(&self) -> Option<&'static str> {
         Some("MfaKeyNotFound")
     }
 }
 
+#[cfg(not(target_family = "wasm"))]
 impl SimpleNodeError for libsignal_net_chat::grpc::accounts::MfaVerificationFailed {
     fn js_error_name(&self) -> Option<&'static str> {
         Some("MfaNotVerified")
     }
 }
 
+#[cfg(not(target_family = "wasm"))]
 impl<E> SignalNodeError for crate::support::RequestOrArgumentError<E>
 where
     libsignal_net_chat::api::RequestError<E>: SignalNodeError,
