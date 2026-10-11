@@ -15,16 +15,12 @@ rust-version.workspace = true
 workspace = true
 
 [dependencies]
-attest = { workspace = true }
-device-transfer = { workspace = true }
 libsignal-account-keys = { workspace = true }
 libsignal-bridge-macros = { workspace = true }
 libsignal-core = { workspace = true }
 libsignal-debug = { workspace = true }
 libsignal-keytrans = { workspace = true }
 libsignal-message-backup = { workspace = true, features = ["json"] }
-libsignal-net = { workspace = true }
-libsignal-net-chat = { workspace = true }
 libsignal-protocol = { workspace = true }
 libsignal-svrb = { workspace = true }
 signal-crypto = { workspace = true }
@@ -58,7 +54,6 @@ sha2 = { workspace = true }
 static_assertions = { workspace = true }
 strum = { workspace = true }
 thiserror = { workspace = true }
-tokio = { workspace = true, features = ["rt-multi-thread"] }
 uuid = { workspace = true }
 visibility = { workspace = true }
 zerocopy = { workspace = true }
@@ -71,6 +66,19 @@ linkme = { workspace = true, optional = true }
 neon = { workspace = true, optional = true, default-features = false, features = ["napi-6"] }
 signal-neon-futures = { workspace = true, optional = true }
 simd_cesu8 = { workspace = true, optional = true }
+
+
+# WEB-FORK: networking (libsignal-net, BoringSSL, multi-threaded tokio) is not built for wasm; the web build reimplements it in TypeScript.
+[target.'cfg(not(target_family = "wasm"))'.dependencies]
+device-transfer = { workspace = true }
+attest = { workspace = true }
+libsignal-net = { workspace = true }
+libsignal-net-chat = { workspace = true }
+tokio = { workspace = true, features = ["rt-multi-thread"] }
+
+[target.'cfg(target_family = "wasm")'.dependencies]
+inventory = { workspace = true }
+tokio = { workspace = true, features = ["sync"] }
 
 [dev-dependencies]
 libsignal-net-grpc = { workspace = true }

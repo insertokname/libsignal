@@ -579,21 +579,25 @@ pub fn TESTING_MyTestEnum_identity(x: MyTestEnum) -> MyTestEnum {
     x
 }
 
+#[cfg(not(target_family = "wasm"))]
 #[bridge_io(TokioAsyncContext, nice = true, jni = false, ffi = false)]
 pub async fn TESTING_MySimpleTestEnum_identity_async(x: MySimpleTestEnum) -> MySimpleTestEnum {
     x
 }
 
+#[cfg(not(target_family = "wasm"))]
 #[bridge_io(TokioAsyncContext, nice = true, jni = false, ffi = false)]
 pub async fn TESTING_MyTestPoint_identity_async(x: MyTestPoint) -> MyTestPoint {
     x
 }
 
+#[cfg(not(target_family = "wasm"))]
 #[bridge_io(TokioAsyncContext, nice = true, jni = false, ffi = false)]
 pub async fn TESTING_MyTestStruct_identity_async(x: MyTestStruct) -> MyTestStruct {
     x
 }
 
+#[cfg(not(target_family = "wasm"))]
 #[bridge_io(TokioAsyncContext, nice = true, jni = false, ffi = false)]
 pub async fn TESTING_MyTestEnum_identity_async(x: MyTestEnum) -> MyTestEnum {
     x
@@ -623,6 +627,7 @@ fn TESTING_MySimpleTestEnum_BridgeVec_identity(
 ) -> BridgeVec<MySimpleTestEnum> {
     x
 }
+#[cfg(not(target_family = "wasm"))]
 #[bridge_io(TokioAsyncContext, nice = true, jni = false, ffi = false)]
 pub async fn TESTING_MySimpleTestEnum_BridgeVec_identity_async(
     x: BridgeVec<MySimpleTestEnum>,

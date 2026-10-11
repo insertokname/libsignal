@@ -2,7 +2,13 @@
 
 use std::marker::PhantomData;
 
+#[cfg(not(target_family = "wasm"))]
 pub use linkme;
+
+// WEB-FORK: wasm has no linker-section registries; `#[neon::main]` registers
+// through `inventory` instead, and `#[neon::export]` is not supported.
+#[cfg(target_family = "wasm")]
+pub use inventory;
 
 use crate::{
     context::{Context, Cx, ModuleContext},
@@ -22,11 +28,22 @@ mod futures;
 
 type Export<'cx> = (&'static str, Handle<'cx, JsValue>);
 
+#[cfg(not(target_family = "wasm"))]
 #[linkme::distributed_slice]
 pub static EXPORTS: [for<'cx> fn(&mut ModuleContext<'cx>) -> NeonResult<Export<'cx>>];
 
+#[cfg(not(target_family = "wasm"))]
 #[linkme::distributed_slice]
 pub static MAIN: [for<'cx> fn(ModuleContext<'cx>) -> NeonResult<()>];
+
+#[cfg(target_family = "wasm")]
+pub static EXPORTS: &[for<'cx> fn(&mut ModuleContext<'cx>) -> NeonResult<Export<'cx>>] = &[];
+
+#[cfg(target_family = "wasm")]
+pub struct Main(pub for<'cx> fn(ModuleContext<'cx>) -> NeonResult<()>);
+
+#[cfg(target_family = "wasm")]
+inventory::collect!(Main);
 
 // Wrapper for the value type and return type tags
 pub struct NeonMarker<Tag, Return>(PhantomData<Tag>, PhantomData<Return>);

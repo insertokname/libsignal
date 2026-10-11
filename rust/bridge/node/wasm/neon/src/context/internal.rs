@@ -60,6 +60,7 @@ fn default_main(mut cx: ModuleContext) -> NeonResult<()> {
     crate::registered().export(&mut cx)
 }
 
+#[cfg(not(target_family = "wasm"))]
 fn init(cx: ModuleContext) -> NeonResult<()> {
     if crate::macro_internal::MAIN.len() > 1 {
         panic!("The `neon::main` macro must only be used once");
@@ -70,6 +71,35 @@ fn init(cx: ModuleContext) -> NeonResult<()> {
     } else {
         default_main(cx)
     }
+}
+
+#[cfg(target_family = "wasm")]
+fn init(cx: ModuleContext) -> NeonResult<()> {
+    let mut mains = ::inventory::iter::<crate::macro_internal::Main>.into_iter();
+    match (mains.next(), mains.next()) {
+        (Some(_), Some(_)) => panic!("The `neon::main` macro must only be used once"),
+        (Some(main), None) => (main.0)(cx),
+        (None, _) => default_main(cx),
+    }
+}
+
+// WEB-FORK: makes the module a WASI "reactor": the host calls `_initialize`
+// once (running static constructors such as `inventory` registrations)
+// instead of the linker wrapping every export with them.
+#[cfg(target_family = "wasm")]
+#[no_mangle]
+unsafe extern "C" fn _initialize() {
+    extern "C" {
+        fn __wasm_call_ctors();
+    }
+    __wasm_call_ctors();
+}
+
+/// WEB-FORK: entry point that emnapi calls after instantiating the module.
+#[cfg(target_family = "wasm")]
+#[no_mangle]
+unsafe extern "C" fn napi_register_wasm_v1(env: *mut c_void, m: *mut c_void) -> *mut c_void {
+    napi_register_module_v1(env, m)
 }
 
 #[no_mangle]

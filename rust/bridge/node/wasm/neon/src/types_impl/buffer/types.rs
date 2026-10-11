@@ -209,6 +209,10 @@ impl TypedArray for JsBuffer {
         let mut buffer = cx.buffer(slice.len())?;
         let target = buffer.as_mut_slice(cx);
         target.copy_from_slice(slice);
+        #[cfg(target_family = "wasm")]
+        unsafe {
+            sys::buffer::sync_to_js(cx.env().to_raw(), buffer.to_local(), slice.len());
+        }
         Ok(buffer)
     }
 }
@@ -419,6 +423,10 @@ impl TypedArray for JsArrayBuffer {
         let mut buffer = JsArrayBuffer::new(cx, len)?;
         let target = buffer.as_mut_slice(cx);
         target.copy_from_slice(slice);
+        #[cfg(target_family = "wasm")]
+        unsafe {
+            sys::buffer::sync_to_js(cx.env().to_raw(), buffer.to_local(), slice.len());
+        }
         Ok(buffer)
     }
 }
@@ -618,6 +626,10 @@ where
         let mut array = Self::from_buffer(cx, buffer)?;
         let target = array.as_mut_slice(cx);
         target.copy_from_slice(slice);
+        #[cfg(target_family = "wasm")]
+        unsafe {
+            sys::buffer::sync_to_js(cx.env().to_raw(), array.to_local(), size);
+        }
 
         Ok(array)
     }

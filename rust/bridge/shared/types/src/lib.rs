@@ -26,11 +26,15 @@ pub mod support;
 
 pub use support::{AsyncRuntime, ResultReporter, describe_panic};
 
+#[cfg(not(target_family = "wasm"))] // WEB-FORK: no networking on wasm
 pub mod cds2;
 pub mod crypto;
+#[cfg(not(target_family = "wasm"))] // WEB-FORK: no networking on wasm
 pub mod hsm_enclave;
+#[cfg(not(target_family = "wasm"))] // WEB-FORK: no networking on wasm
 pub mod net;
 pub mod protocol;
+#[cfg(not(target_family = "wasm"))] // WEB-FORK: no networking on wasm
 pub mod sgx_session;
 pub mod zkgroup;
 

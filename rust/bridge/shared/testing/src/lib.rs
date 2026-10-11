@@ -11,12 +11,15 @@ use std::time::Duration;
 
 use futures_util::StreamExt as _;
 use libsignal_bridge_macros::{BridgedAsValue, bridge_fn, bridge_io};
+#[cfg(not(target_family = "wasm"))]
 use libsignal_bridge_types::net::TokioAsyncContext;
+#[cfg(not(target_family = "wasm"))]
 use libsignal_bridge_types::net::chat::{BridgeBulkPolledStream, StreamCancelled};
 #[cfg(feature = "node")]
 pub use libsignal_bridge_types::node;
 use libsignal_bridge_types::support::*;
 use libsignal_bridge_types::*;
+#[cfg(not(target_family = "wasm"))]
 use libsignal_net_chat::stream_util::{BulkPolledStreamChunk, BulkPolledStreamTerminationReason};
 
 use crate::types::Ignored;
@@ -24,8 +27,10 @@ use crate::types::Ignored;
 pub mod convert;
 pub mod crypto;
 pub mod message_backup;
+#[cfg(not(target_family = "wasm"))] // WEB-FORK: no networking on wasm
 pub mod net;
 #[cfg(feature = "node")]
+#[cfg(not(target_family = "wasm"))] // WEB-FORK: no networking on wasm
 pub mod net_env;
 pub mod protocol;
 pub mod types;
@@ -42,11 +47,13 @@ pub fn TESTING_BridgedStringMap_dump_to_json(map: &BridgedStringMap) -> String {
         .expect("map of string -> string is always valid JSON")
 }
 
+#[cfg(not(target_family = "wasm"))]
 #[bridge_fn]
 pub fn TESTING_TokioAsyncContext_NewSingleThreaded() -> TokioAsyncContext {
     TokioAsyncContext::new_single_threaded()
 }
 
+#[cfg(not(target_family = "wasm"))]
 #[bridge_fn(ffi = false, node = false)]
 pub fn TESTING_TokioAsyncContext_AttachBlockingThreadToJVMPermanently(
     context: &TokioAsyncContext,
@@ -63,11 +70,15 @@ pub fn TESTING_TokioAsyncContext_AttachBlockingThreadToJVMPermanently(
         .expect("no panic");
 }
 
+#[cfg(not(target_family = "wasm"))]
 pub struct TestStream(BridgeBulkPolledStream<String, IllegalArgumentError>);
 
+#[cfg(not(target_family = "wasm"))]
 bridge_as_handle!(TestStream);
+#[cfg(not(target_family = "wasm"))]
 bridge_handle_fns!(TestStream, clone = false);
 
+#[cfg(not(target_family = "wasm"))]
 #[derive(BridgedAsValue)]
 #[bridge(arg = false)]
 pub struct TestStreamChunk {
@@ -75,6 +86,7 @@ pub struct TestStreamChunk {
     termination: Option<BulkPolledStreamTerminationReason<IllegalArgumentError>>,
 }
 
+#[cfg(not(target_family = "wasm"))]
 #[bridge_fn]
 pub fn TESTING_BulkPullFromStream_New(contents: Box<[String]>, end_with_error: bool) -> TestStream {
     TestStream(BridgeBulkPolledStream::new(
@@ -88,6 +100,7 @@ pub fn TESTING_BulkPullFromStream_New(contents: Box<[String]>, end_with_error: b
     ))
 }
 
+#[cfg(not(target_family = "wasm"))]
 #[bridge_io(TokioAsyncContext)]
 pub async fn TESTING_BulkPullFromStream_NextChunk(stream: &TestStream) -> TestStreamChunk {
     match stream.0.next_chunk().await {
@@ -104,12 +117,14 @@ pub async fn TESTING_BulkPullFromStream_NextChunk(stream: &TestStream) -> TestSt
     }
 }
 
+#[cfg(not(target_family = "wasm"))]
 #[bridge_fn]
 pub fn TESTING_BulkPullFromStream_Cancel(stream: &TestStream) {
     stream.0.cancel();
 }
 
 // To generate the return converter
+#[cfg(not(target_family = "wasm"))]
 #[bridge_fn(nice = true)]
 pub fn TESTING_TestStreamChunk_return() -> TestStreamChunk {
     unreachable!()

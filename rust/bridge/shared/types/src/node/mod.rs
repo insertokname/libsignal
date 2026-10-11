@@ -18,6 +18,7 @@ use signal_neon_futures::{JsFuture, JsPromiseResult};
 /// declared `node_fooBar`.
 // Declared early so it can be used in submodules.
 #[macro_export]
+#[cfg(not(target_family = "wasm"))]
 macro_rules! node_register {
     ( $name:ident ) => {
         ::paste::paste! {
@@ -29,6 +30,24 @@ macro_rules! node_register {
         }
     };
 }
+
+// WEB-FORK: wasm has no linker-section registries, so entry points are
+// collected with `inventory` instead.
+#[macro_export]
+#[cfg(target_family = "wasm")]
+macro_rules! node_register {
+    ( $name:ident ) => {
+        ::paste::paste! {
+            $crate::node::inventory::submit! {
+                $crate::node::NodeFn(stringify!($name), [<node_ $name>])
+            }
+        }
+    };
+}
+
+#[cfg(target_family = "wasm")]
+#[doc(hidden)]
+pub use inventory;
 
 #[macro_use]
 mod convert;
@@ -43,6 +62,7 @@ pub use futures::*;
 mod io;
 pub use io::*;
 
+#[cfg(not(target_family = "wasm"))] // WEB-FORK: no networking on wasm
 mod chat;
 
 use crate::support::{BridgedCallbacks, WithContext};
@@ -52,12 +72,30 @@ use crate::support::{BridgedCallbacks, WithContext};
 pub type JsFn = for<'a> fn(FunctionContext<'a>) -> JsResult<'a, JsValue>;
 
 #[doc(hidden)]
+#[cfg(not(target_family = "wasm"))]
 #[linkme::distributed_slice]
 pub static LIBSIGNAL_FNS: [(&'static str, JsFn)] = [..];
 
 /// Exports all `bridge_fn`-generated entry points.
+#[cfg(not(target_family = "wasm"))]
 pub fn register(cx: &mut ModuleContext) -> NeonResult<()> {
     for (name, f) in LIBSIGNAL_FNS {
+        cx.export_function(name, *f)?;
+    }
+    Ok(())
+}
+
+#[doc(hidden)]
+#[cfg(target_family = "wasm")]
+pub struct NodeFn(pub &'static str, pub JsFn);
+
+#[cfg(target_family = "wasm")]
+inventory::collect!(NodeFn);
+
+/// Exports all `bridge_fn`-generated entry points.
+#[cfg(target_family = "wasm")]
+pub fn register(cx: &mut ModuleContext) -> NeonResult<()> {
+    for NodeFn(name, f) in inventory::iter::<NodeFn> {
         cx.export_function(name, *f)?;
     }
     Ok(())

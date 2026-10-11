@@ -104,6 +104,7 @@ impl std::fmt::Display for IllegalArgumentError {
 /// For bridge functions that validate their arguments before making a request, so that a
 /// programmer error surfaces as an invalid-argument error in each app language rather than being
 /// dressed up as something the server said.
+#[cfg(not(target_family = "wasm"))] // WEB-FORK: no networking on wasm
 #[derive(Debug, derive_more::From, displaydoc::Display)]
 pub enum RequestOrArgumentError<E> {
     /// {0}

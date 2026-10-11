@@ -16,11 +16,16 @@ pub fn main(
 
     let name = &sig.ident;
     let export_name = quote::format_ident!("__NEON_MAIN__{name}");
+    // WEB-FORK: wasm registers the entry point through `inventory`.
     let export_fn = quote::quote!({
-        #[neon::macro_internal::linkme::distributed_slice(neon::macro_internal::MAIN)]
-        #[linkme(crate = neon::macro_internal::linkme)]
+        #[cfg_attr(not(target_family = "wasm"), neon::macro_internal::linkme::distributed_slice(neon::macro_internal::MAIN))]
+        #[cfg_attr(not(target_family = "wasm"), linkme(crate = neon::macro_internal::linkme))]
         fn #export_name(cx: neon::context::ModuleContext) -> neon::result::NeonResult<()> {
             #name(cx)
+        }
+        #[cfg(target_family = "wasm")]
+        neon::macro_internal::inventory::submit! {
+            neon::macro_internal::Main(#export_name)
         }
     });
 

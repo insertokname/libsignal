@@ -5,6 +5,7 @@
 
 use std::str::FromStr as _;
 
+#[cfg(not(target_family = "wasm"))]
 use ::attest::svr2::lookup_groupid;
 use libsignal_account_keys::*;
 use libsignal_bridge_macros::*;
@@ -33,6 +34,7 @@ pub fn PinHash_FromSalt(pin: &[u8], salt: &[u8; 32]) -> Result<PinHash> {
 
 /// Hashes a pin for SVR2, salted with the username and the group id of the
 /// enclave identified by `mrenclave`.
+#[cfg(not(target_family = "wasm"))]
 pub(crate) fn svr2_pin_hash(
     normalized_pin: &[u8],
     username: &str,
@@ -42,6 +44,7 @@ pub(crate) fn svr2_pin_hash(
     PinHash::create(normalized_pin, &PinHash::make_salt(username, group_id))
 }
 
+#[cfg(not(target_family = "wasm"))]
 #[bridge_fn]
 pub fn PinHash_FromUsernameMrenclave(
     pin: &[u8],

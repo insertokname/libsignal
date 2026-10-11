@@ -419,7 +419,23 @@ pub use napi8::*;
 
 use super::{Env, Status};
 
+// WEB-FORK: on wasm every Node-API function is a direct import (see `generate!`).
+#[cfg(target_family = "wasm")]
+pub(crate) unsafe fn load(env: Env) -> Result<(), std::convert::Infallible> {
+    #[link(wasm_import_module = "napi")]
+    unsafe extern "C" {
+        fn napi_get_version(env: Env, result: *mut u32) -> Status;
+    }
+    let mut actual_version = 0;
+    assert_eq!(napi_get_version(env, &mut actual_version), Status::Ok);
+    if actual_version < 6 {
+        eprintln!("Minimum required Node-API version 6, found {actual_version}.");
+    }
+    Ok(())
+}
+
 // This symbol is loaded separately because it is a prerequisite
+#[cfg(not(target_family = "wasm"))]
 unsafe fn get_version(host: &libloading::Library, env: Env) -> Result<u32, libloading::Error> {
     let get_version = host.get::<fn(Env, *mut u32) -> Status>(b"napi_get_version")?;
     let mut version = 0;
@@ -429,6 +445,7 @@ unsafe fn get_version(host: &libloading::Library, env: Env) -> Result<u32, liblo
     Ok(version)
 }
 
+#[cfg(not(target_family = "wasm"))]
 pub(crate) unsafe fn load(env: Env) -> Result<(), libloading::Error> {
     #[cfg(not(windows))]
     let host = libloading::os::unix::Library::this().into();

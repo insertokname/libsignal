@@ -83,3 +83,35 @@ pub unsafe fn size(env: Env, buf: Local) -> usize {
 
     size
 }
+
+/// WEB-FORK: under emnapi, a JavaScript buffer's bytes are mirrored in wasm
+/// memory; after writing to the mirror they must be copied back to JavaScript.
+/// Neon's `from_slice` constructors do this; other writes through
+/// `as_mut_slice` are not reflected on wasm.
+///
+/// # Safety
+/// `env` must be valid for the current thread and `value` must be an
+/// `ArrayBuffer` or an `ArrayBufferView`.
+#[cfg(target_family = "wasm")]
+pub unsafe fn sync_to_js(env: Env, value: Local, len: usize) {
+    #[link(wasm_import_module = "emnapi")]
+    extern "C" {
+        fn emnapi_sync_memory(
+            env: Env,
+            js_to_wasm: bool,
+            arraybuffer_or_view: *mut Local,
+            offset: usize,
+            len: usize,
+        ) -> napi::Status;
+    }
+
+    // An empty buffer has no mirror (and emnapi rejects syncing it).
+    if len == 0 {
+        return;
+    }
+    let mut value = value;
+    assert_eq!(
+        emnapi_sync_memory(env, false, &mut value, 0, len),
+        napi::Status::Ok
+    );
+}
