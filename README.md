@@ -1,3 +1,7 @@
+# VIBECODED BULLSHIT AHEAD!
+
+This was built for personal purposes and if you plan on using it too keep in mind it's pure unfiltered slop
+
 # Overview
 
 libsignal contains platform-agnostic APIs used by the official Signal clients and servers, exposed
